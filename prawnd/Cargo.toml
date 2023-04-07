@@ -1,0 +1,18 @@
+[package]
+name = "prawnd"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# for errors
+anyhow = "1.0"
+
+# for date-time
+chrono = "0.4"
+
+# for logging
+tracing="0.1"
+tracing-subscriber={version="0.3",features=["env-filter"]}
+tracing-appender="0.2"
