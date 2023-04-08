@@ -1,6 +1,6 @@
-use anyhow::Result;
+use anyhow::{bail,Result};
 
-use chrono::{Local,Duration,DateTime};
+use chrono::{Local,Duration};
 
 #[allow(unused_imports)]
 use tracing::{info,debug,warn,error,trace,Level};
@@ -43,58 +43,34 @@ fn run() -> Result<()> {
     match std::env::args().nth(1) {
         Some(command) if command == "register" => {
             debug!("Called with register");
-            schedule::register(Local::now() + Duration::seconds(15))?
+            match schedule::register(Local::now() + Duration::seconds(15)) {
+                Ok(timer_id) => {
+                    println!("timer id: {}", timer_id);
+                    Ok(())
+                },
+                Err(e) => Err(e),
+            }
         },
         Some(command) if command == "unregister" => {
             debug!("Called with unregister");
-            schedule::unregister()?
-        },
-        Some(command) if command == "init" => {
-            debug!("Called with init");
-            let tasks = tasks::Tasks::new();
-            tasks.write()?;
+            schedule::unregister()
         },
         Some(command) if command == "status" => {
             debug!("Called with status");
-            if let Some(tasks) = tasks::Tasks::read()? {
-                println!("Found {} tasks",tasks.len());
-                tasks.list_all();
-            } else {
-                println!("No tasks found.");
-            }
-        },
-        Some(command) if command == "add" => {
-            debug!("Called with add");
-            let mut tasks = match tasks::Tasks::read()? {
-                Some(x) => x,
-                None => tasks::Tasks::new(),
-            };
-            let uuid = 0;
-            let task = task::gen_task(uuid)?;
-            tasks.add_task(task);
-            tasks.write()?;
-        },
-        Some(command) if command == "update" => {
-            debug!("Called with update");
-            if let Some(tasks) = tasks::Tasks::read()? {
-                match tasks.update_all() {
-                    Some(next_event) => schedule::register(next_event.with_timezone(&Local))?,
-                    None => {},
-                }
-                tasks.write()?;
-            }
+            Ok(())
         },
         Some(command) => {
             debug!("Called with some other command: {}", command);
             println!("Command not recognized");
             print_usage();
+            Ok(())
         },
         None => {
             debug!("Called with no argument");
             print_usage();
+            Ok(())
         },
     }
-    Ok(())
 }
 
 fn main() {
