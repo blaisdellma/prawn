@@ -20,7 +20,6 @@ pub enum EnableStatus {
 
 #[derive(Serialize,Deserialize)]
 pub struct Task {
-    id: i64,
     title: String,
     description: String,
     enabled: EnableStatus,
@@ -71,10 +70,6 @@ impl Task {
     pub fn disable(&mut self) {
         self.enabled = EnableStatus::Disabled;
     }
-
-    pub fn id(&self) -> i64 {
-        self.id
-    }
     
     // pub fn title(&self) -> &str {
     //     &self.title
@@ -103,7 +98,7 @@ impl Task {
 
 impl std::fmt::Debug for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        f.write_str(&format!("{} (#{})\n", self.title, self.id))?;
+        f.write_str(&format!("{}\n", self.title))?;
         f.write_str(&format!("{}\n", self.description))?;
         f.write_str(&format!("Deadline: {} (-{},+{})\n", self.deadline,self.pre_period(),self.post_period()))?;
         Ok(())
@@ -119,7 +114,7 @@ fn input(label: &str) -> Result<String> {
     Ok(input)
 }
 
-pub fn gen_task(id: i64) -> Result<Task> {
+pub fn get_task_from_stdin() -> Result<Task> {
     let title = input("Title: ")?;
     let description = input("Description: ")?;
 
@@ -131,7 +126,6 @@ pub fn gen_task(id: i64) -> Result<Task> {
     let post_period = input("Post: ")?;
 
     Ok(Task {
-        id,
         title,
         description,
         enabled: EnableStatus::Enabled,

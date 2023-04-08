@@ -13,7 +13,7 @@ const TASKS_FILE : &'static str = "/home/lethe/.local/prawn/tasks";
 
 #[derive(Serialize,Deserialize)]
 pub struct Tasks {
-    tasks: HashMap<i64,Task>,
+    tasks: HashMap<usize,Task>,
 }
 
 impl Tasks {
@@ -44,12 +44,14 @@ impl Tasks {
         self.tasks.len()
     }
 
-    pub fn add_task(&mut self, task: Task) {
-        self.tasks.insert(task.id(),task);
+    pub fn add_task(&mut self, task: Task) -> usize {
+        let uuid = self.tasks.keys().max().map(|x| x + 1).unwrap_or(0);
+        self.tasks.insert(uuid,task);
+        uuid
     }
 
-    pub fn update_task(&mut self, task_new: Task) {
-        if let Some(task) = self.tasks.get_mut(&task_new.id()) {
+    pub fn change_task(&mut self, uuid: usize, task_new: Task) {
+        if let Some(task) = self.tasks.get_mut(&uuid) {
             *task = task_new;
         }
     }

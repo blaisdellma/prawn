@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use anyhow::Result;
 
 use chrono::{Local,Duration,DateTime};
@@ -69,9 +71,15 @@ fn run() -> Result<()> {
                 Some(x) => x,
                 None => tasks::Tasks::new(),
             };
-            let uuid = 0;
-            let task = task::gen_task(uuid)?;
-            tasks.add_task(task);
+            let task = if atty::is(atty::Stream::Stdin) {
+                task::get_task_from_stdin()?
+            } else {
+                let mut input = String::new();
+                std::io::stdin().read_to_string(&mut input)?;
+                serde_json::from_str(&input)?
+            };
+            let uuid = tasks.add_task(task);
+            debug!("Added task {}", uuid);
             tasks.write()?;
         },
         Some(command) if command == "update" => {
