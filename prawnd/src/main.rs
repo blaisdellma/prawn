@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use anyhow::Result;
+use anyhow::{anyhow,Result};
 
 use chrono::{Local,Duration,DateTime};
 
@@ -33,12 +33,16 @@ fn init_log() -> Result<ta::non_blocking::WorkerGuard> {
 
 fn print_usage() {
     println!(
-r#"USAGE: prawnd COMMAND
+r#"USAGE: prawnd COMMAND [ARGS ..]
 
 commands:
-    register : registers systemd timer
+    register   : registers systemd timer
     unregister : unregisters systemd timer
-    status : displays status"#);
+    status     : displays status
+    init       : initialize task storage
+    add        : add task to list - pipe in JSON or use interactively
+    modify X   : modify task with id X - pipe in JSON or use interactively
+    update     : updates all tasks and registers systemd timer for next event"#);
 }
 
 fn run() -> Result<()> {
@@ -64,6 +68,14 @@ fn run() -> Result<()> {
             } else {
                 println!("No tasks found.");
             }
+            match schedule::read_timer_id()? {
+                Some(timer_id) => {
+                    println!("Timer id: {}", timer_id);
+                },
+                None => {
+                    println!("No timer id found");
+                },
+            }
         },
         Some(command) if command == "add" => {
             debug!("Called with add");
@@ -80,6 +92,30 @@ fn run() -> Result<()> {
             };
             let uuid = tasks.add_task(task);
             debug!("Added task {}", uuid);
+            tasks.write()?;
+        },
+        Some(command) if command == "modify" => {
+            debug!("Called with modify");
+            let mut tasks = match tasks::Tasks::read()? {
+                Some(x) => x,
+                None => {
+                    warn!("No tasks found");
+                    return Ok(());
+                },
+            };
+            let uuid: usize = std::env::args()
+                .nth(2)
+                .ok_or(anyhow!("Not enough arguments"))?
+                .parse()?;
+            let task = if atty::is(atty::Stream::Stdin) {
+                task::get_task_from_stdin()?
+            } else {
+                let mut input = String::new();
+                std::io::stdin().read_to_string(&mut input)?;
+                serde_json::from_str(&input)?
+            };
+            tasks.modify_task(uuid,task);
+            debug!("Modified task {}", uuid);
             tasks.write()?;
         },
         Some(command) if command == "update" => {

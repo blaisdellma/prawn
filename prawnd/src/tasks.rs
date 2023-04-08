@@ -50,7 +50,7 @@ impl Tasks {
         uuid
     }
 
-    pub fn change_task(&mut self, uuid: usize, task_new: Task) {
+    pub fn modify_task(&mut self, uuid: usize, task_new: Task) {
         if let Some(task) = self.tasks.get_mut(&uuid) {
             *task = task_new;
         }
