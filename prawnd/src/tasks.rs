@@ -70,12 +70,15 @@ impl Tasks {
 
     pub fn update_all(&self) -> Option<DateTime<Utc>> {
         let now = Utc::now();
-        self.tasks.values().filter_map(|task| task.update(now)).min()
+        self.tasks.values().filter_map(|task| task.get_next_event(now)).min()
     }
 
     pub fn list_all(&self) {
+        let now = Utc::now();
         for task in self.tasks.values() {
             println!("{:?}",task);
+            println!("Status: {}", task.get_status(now));
+            println!("");
         }
     }
 }

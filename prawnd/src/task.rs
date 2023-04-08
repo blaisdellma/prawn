@@ -5,11 +5,21 @@ use anyhow::Result;
 use chrono::{DateTime,Local,Utc,Duration,serde::ts_seconds};
 use serde::{Serialize,Deserialize};
 
+const TASK_STATUS_STR : [&'static str; 4] = ["waiting", "pre-deadline", "post-deadline", "late"];
+
+#[derive(Copy,Clone)]
 pub enum TaskStatus {
     Waiting,
     PreDeadline,
     PostDeadline,
     Late,
+}
+
+impl std::fmt::Display for TaskStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        f.pad(TASK_STATUS_STR[*self as usize])?;
+        Ok(())
+    }
 }
 
 #[derive(PartialEq,Serialize,Deserialize)]
@@ -37,7 +47,7 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn update(&self, now: DateTime<Utc>) -> Option<DateTime<Utc>> {
+    pub fn get_next_event(&self, now: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self.enabled {
             EnableStatus::Enabled => {
                 match self.get_status(now) {
@@ -100,7 +110,7 @@ impl std::fmt::Debug for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         f.write_str(&format!("{}\n", self.title))?;
         f.write_str(&format!("{}\n", self.description))?;
-        f.write_str(&format!("Deadline: {} (-{},+{})\n", self.deadline,self.pre_period(),self.post_period()))?;
+        f.write_str(&format!("Deadline: {} (-{},+{})", self.deadline,self.pre_period(),self.post_period()))?;
         Ok(())
     }
 }
