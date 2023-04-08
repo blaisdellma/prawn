@@ -56,6 +56,18 @@ impl Tasks {
         }
     }
 
+    pub fn enable_task(&mut self, uuid: usize) {
+        if let Some(task) = self.tasks.get_mut(&uuid) {
+            task.enable();
+        }
+    }
+
+    pub fn disable_task(&mut self, uuid: usize) {
+        if let Some(task) = self.tasks.get_mut(&uuid) {
+            task.disable();
+        }
+    }
+
     pub fn update_all(&self) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         self.tasks.values().filter_map(|task| task.update(now)).min()

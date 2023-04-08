@@ -2,7 +2,7 @@ use std::io::Read;
 
 use anyhow::{anyhow,Result};
 
-use chrono::{Local,Duration,DateTime};
+use chrono::{Local,Duration};
 
 #[allow(unused_imports)]
 use tracing::{info,debug,warn,error,trace,Level};
@@ -42,6 +42,8 @@ commands:
     init       : initialize task storage
     add        : add task to list - pipe in JSON or use interactively
     modify X   : modify task with id X - pipe in JSON or use interactively
+    enable X   : enable task with id X
+    disable X  : disable task with id X
     update     : updates all tasks and registers systemd timer for next event"#);
 }
 
@@ -116,6 +118,40 @@ fn run() -> Result<()> {
             };
             tasks.modify_task(uuid,task);
             debug!("Modified task {}", uuid);
+            tasks.write()?;
+        },
+        Some(command) if command == "enable" => {
+            debug!("Called with enable");
+            let mut tasks = match tasks::Tasks::read()? {
+                Some(x) => x,
+                None => {
+                    warn!("No tasks found");
+                    return Ok(());
+                },
+            };
+            let uuid: usize = std::env::args()
+                .nth(2)
+                .ok_or(anyhow!("Not enough arguments"))?
+                .parse()?;
+            tasks.enable_task(uuid);
+            debug!("Enabled task {}", uuid);
+            tasks.write()?;
+        },
+        Some(command) if command == "disable" => {
+            debug!("Called with disable");
+            let mut tasks = match tasks::Tasks::read()? {
+                Some(x) => x,
+                None => {
+                    warn!("No tasks found");
+                    return Ok(());
+                },
+            };
+            let uuid: usize = std::env::args()
+                .nth(2)
+                .ok_or(anyhow!("Not enough arguments"))?
+                .parse()?;
+            tasks.disable_task(uuid);
+            debug!("Disabled task {}", uuid);
             tasks.write()?;
         },
         Some(command) if command == "update" => {
