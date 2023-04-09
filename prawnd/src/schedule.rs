@@ -1,13 +1,11 @@
 use std::io::{Read,Write};
 
 use anyhow::{bail,Result};
-
 use chrono::{Local,DateTime};
-
 #[allow(unused_imports)]
 use tracing::{info,debug,warn,error,trace,Level};
 
-const TIMER_ID_FILE: &'static str = "/home/lethe/.local/prawn/timer_id";
+const TIMER_ID_FILE: &'static str = "timer_id";
 
 fn extract_timer_id(stderr_output: &str) -> &str {
     stderr_output
@@ -85,18 +83,21 @@ pub fn unregister() -> Result<()> {
 }
 
 pub fn write_timer_id(timer_id: &str) -> Result<()> {
-    let mut file = std::fs::File::create(TIMER_ID_FILE)?;
+    let filename = crate::get_path(TIMER_ID_FILE)?;
+    let mut file = std::fs::File::create(filename)?;
     file.write(timer_id.as_bytes())?;
     Ok(())
 }
 
 pub fn erase_timer_id() -> Result<()> {
-    std::fs::remove_file(TIMER_ID_FILE)?;
+    let filename = crate::get_path(TIMER_ID_FILE)?;
+    std::fs::remove_file(filename)?;
     Ok(())
 }
 
 pub fn read_timer_id() -> Result<Option<String>> {
-    let mut file = match std::fs::File::open(TIMER_ID_FILE) {
+    let filename = crate::get_path(TIMER_ID_FILE)?;
+    let mut file = match std::fs::File::open(filename) {
         Ok(x) => x,
         Err(_) => return Ok(None),
     };

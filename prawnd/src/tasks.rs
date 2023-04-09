@@ -2,14 +2,12 @@ use std::collections::HashMap;
 use std::io::{BufReader,BufWriter};
 
 use anyhow::Result;
-
 use chrono::{DateTime,Utc};
-
 use serde::{Serialize,Deserialize};
 
 use crate::task::*;
 
-const TASKS_FILE : &'static str = "/home/lethe/.local/prawn/tasks";
+const TASKS_FILE : &'static str = "tasks";
 
 #[derive(Serialize,Deserialize)]
 pub struct Tasks {
@@ -24,7 +22,8 @@ impl Tasks {
     }
 
     pub fn read() -> Result<Option<Self>> {
-        if let Ok(file) = std::fs::File::open(TASKS_FILE) {
+        let filename = crate::get_path(TASKS_FILE)?;
+        if let Ok(file) = std::fs::File::open(filename) {
             let reader = BufReader::new(file);
             let tasks = serde_json::from_reader(reader)?;
             Ok(Some(tasks))
@@ -34,7 +33,8 @@ impl Tasks {
     }
 
     pub fn write(&self) -> Result<()> {
-        let file = std::fs::File::create(TASKS_FILE)?;
+        let filename = crate::get_path(TASKS_FILE)?;
+        let file = std::fs::File::create(filename)?;
         let writer = BufWriter::new(file);
         serde_json::to_writer(writer,self)?;
         Ok(())

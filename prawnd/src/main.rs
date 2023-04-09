@@ -1,9 +1,7 @@
 use std::io::Read;
 
-use anyhow::{anyhow,Result};
-
+use anyhow::{anyhow,bail,Result};
 use chrono::{Local,Duration};
-
 #[allow(unused_imports)]
 use tracing::{info,debug,warn,error,trace,Level};
 use tracing_subscriber as ts;
@@ -13,15 +11,26 @@ mod task;
 mod tasks;
 mod schedule;
 
-const LOG_PATH: &'static str = "/home/lethe/.local/prawn/log";
+pub fn get_path(tail: &str) -> Result<std::path::PathBuf> {
+    match std::env::var("HOME") {
+        Ok(s) => {
+            let mut path: std::path::PathBuf = s.into();
+            path.push(".local/prawn/");
+            path.push(tail);
+            Ok(path)
+        },
+        Err(_) => bail!("$HOME not set"),
+    }
+}
 
 fn init_log() -> Result<ta::non_blocking::WorkerGuard> {
+    let log_path = get_path("log")?;
     std::fs::DirBuilder::new()
         .recursive(true)
-        .create(LOG_PATH)?;
+        .create(&log_path)?;
 
     let prefix = "testing.log";
-    let (file, guard) = ta::non_blocking(ta::rolling::never(LOG_PATH,prefix));
+    let (file, guard) = ta::non_blocking(ta::rolling::never(log_path,prefix));
     ts::fmt()
         .with_writer(file)
         .with_max_level(Level::DEBUG)
