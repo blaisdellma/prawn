@@ -81,4 +81,19 @@ impl Tasks {
             println!("");
         }
     }
+
+    pub fn print_digest(&self) {
+        let now = Utc::now();
+        let mut tasks = self.tasks.values()
+            .filter(|task| task.get_status(now) != TaskStatus::Waiting)
+            .collect::<Vec<_>>();
+        tasks.sort_by_key(|task| {
+            task.get_status(now)
+        });
+        for task in tasks.iter().rev() {
+            println!("{:?}",task);
+            println!("Status: {}", task.get_status(now));
+            println!("");
+        }
+    }
 }

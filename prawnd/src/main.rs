@@ -36,6 +36,7 @@ fn print_usage() {
 r#"USAGE: prawnd COMMAND [ARGS ..]
 
 commands:
+    digest     : prints out task digest
     register   : registers systemd timer
     unregister : unregisters systemd timer
     status     : displays status
@@ -77,6 +78,15 @@ fn run() -> Result<()> {
                 None => {
                     println!("No timer id found");
                 },
+            }
+        },
+        Some(command) if command == "digest" => {
+            debug!("Called with digest");
+            if let Some(tasks) = tasks::Tasks::read()? {
+                debug!("Found {} tasks",tasks.len());
+                tasks.print_digest();
+            } else {
+                println!("No tasks found.");
             }
         },
         Some(command) if command == "add" => {

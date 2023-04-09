@@ -7,7 +7,7 @@ use serde::{Serialize,Deserialize};
 
 const TASK_STATUS_STR : [&'static str; 4] = ["waiting", "pre-deadline", "post-deadline", "late"];
 
-#[derive(Copy,Clone)]
+#[derive(Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub enum TaskStatus {
     Waiting,
     PreDeadline,
