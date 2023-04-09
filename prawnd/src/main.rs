@@ -45,6 +45,7 @@ commands:
     modify X   : modify task with id X - pipe in JSON or use interactively
     enable X   : enable task with id X
     disable X  : disable task with id X
+    complete X : complete task with id X and set new deadline
     update     : updates all tasks and registers systemd timer for next event"#);
 }
 
@@ -162,6 +163,23 @@ fn run() -> Result<()> {
                 .parse()?;
             tasks.disable_task(uuid);
             debug!("Disabled task {}", uuid);
+            tasks.write()?;
+        },
+        Some(command) if command == "complete" => {
+            debug!("Called with complete");
+            let mut tasks = match tasks::Tasks::read()? {
+                Some(x) => x,
+                None => {
+                    warn!("No tasks found");
+                    return Ok(());
+                },
+            };
+            let uuid: usize = std::env::args()
+                .nth(2)
+                .ok_or(anyhow!("Not enough arguments"))?
+                .parse()?;
+            tasks.complete_task(uuid);
+            debug!("Completed task {}", uuid);
             tasks.write()?;
         },
         Some(command) if command == "update" => {

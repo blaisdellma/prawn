@@ -48,6 +48,10 @@ pub struct Task {
 }
 
 impl Task {
+    pub fn complete(&mut self, now: DateTime<Utc>) {
+        self.deadline = now + self.interval();
+    }
+
     pub fn get_next_event(&self, now: DateTime<Utc>) -> Option<DateTime<Utc>> {
         match self.enabled {
             EnableStatus::Enabled => {

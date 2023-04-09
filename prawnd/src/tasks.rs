@@ -68,6 +68,13 @@ impl Tasks {
         }
     }
 
+    pub fn complete_task(&mut self, uuid: usize) {
+        if let Some(task) = self.tasks.get_mut(&uuid) {
+            let now = Utc::now();
+            task.complete(now);
+        }
+    }
+
     pub fn update_all(&self) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         self.tasks.values().filter_map(|task| task.get_next_event(now)).min()
@@ -75,7 +82,8 @@ impl Tasks {
 
     pub fn list_all(&self) {
         let now = Utc::now();
-        for task in self.tasks.values() {
+        for (index,task) in self.tasks.iter() {
+            println!("TASK #{}",index);
             println!("{:?}",task);
             println!("Status: {}", task.get_status(now));
             println!("");
