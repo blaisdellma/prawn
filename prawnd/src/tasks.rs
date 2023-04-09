@@ -88,9 +88,9 @@ impl Tasks {
             .filter(|task| task.get_status(now) != TaskStatus::Waiting)
             .collect::<Vec<_>>();
         tasks.sort_by_key(|task| {
-            task.get_status(now)
+            task.get_next_event(now)
         });
-        for task in tasks.iter().rev() {
+        for task in tasks {
             println!("{:?}",task);
             println!("Status: {}", task.get_status(now));
             println!("");

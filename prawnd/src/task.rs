@@ -44,6 +44,7 @@ pub struct Task {
 
     pre_period: i64, // seconds
     post_period: i64, // seconds
+    interval: i64, // seconds
 }
 
 impl Task {
@@ -104,13 +105,19 @@ impl Task {
     pub fn post_period(&self) -> Duration {
         Duration::seconds(self.post_period)
     }
+
+    pub fn interval(&self) -> Duration {
+        Duration::seconds(self.interval)
+    }
 }
 
 impl std::fmt::Debug for Task {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         f.write_str(&format!("{}\n", self.title))?;
         f.write_str(&format!("{}\n", self.description))?;
-        f.write_str(&format!("Deadline: {} (-{},+{})", self.deadline,self.pre_period(),self.post_period()))?;
+        f.write_str(&format!("Deadline: {}\n", self.deadline))?;
+        f.write_str(&format!("Windows: {}, {}\n",self.pre_period(),self.post_period()))?;
+        f.write_str(&format!("Interval: {}", self.interval()))?;
         Ok(())
     }
 }
@@ -134,6 +141,7 @@ pub fn get_task_from_stdin() -> Result<Task> {
 
     let pre_period = input("Pre: ")?;
     let post_period = input("Post: ")?;
+    let interval = input("Interval: ")?;
 
     Ok(Task {
         title,
@@ -143,5 +151,6 @@ pub fn get_task_from_stdin() -> Result<Task> {
 
         pre_period: pre_period.parse::<i64>()? * 24 * 3600,
         post_period: post_period.parse::<i64>()? * 24 * 3600,
+        interval: interval.parse::<i64>()? * 24 * 3600,
     })
 }
