@@ -23,3 +23,7 @@ serde_json={version="1.0",features=["std"]}
 
 # for piped input
 atty = "0.2"
+
+# for scheduling future wake-ups
+lazy_static = "1.4"
+systemd-wake = "0.1"

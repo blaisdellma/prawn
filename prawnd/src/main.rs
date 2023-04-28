@@ -9,7 +9,10 @@ use tracing_appender as ta;
 
 mod task;
 mod tasks;
-mod schedule;
+
+lazy_static::lazy_static! {
+    static ref UNIT_NAME: systemd_wake::UnitName<'static> = systemd_wake::UnitName::new("prawnd").unwrap();
+}
 
 pub fn get_path(tail: &str) -> Result<std::path::PathBuf> {
     match std::env::var("HOME") {
@@ -62,11 +65,11 @@ fn run() -> Result<()> {
     match std::env::args().nth(1) {
         Some(command) if command == "register" => {
             debug!("Called with register");
-            schedule::register(Local::now() + Duration::seconds(15))?
+            systemd_wake::register(Local::now().naive_local() + Duration::seconds(15),*UNIT_NAME,std::process::Command::new("prawnd"))?;
         },
         Some(command) if command == "unregister" => {
             debug!("Called with unregister");
-            schedule::unregister()?
+            systemd_wake::deregister(*UNIT_NAME)?;
         },
         Some(command) if command == "init" => {
             debug!("Called with init");
@@ -81,13 +84,12 @@ fn run() -> Result<()> {
             } else {
                 println!("No tasks found.");
             }
-            match schedule::read_timer_id()? {
-                Some(timer_id) => {
-                    println!("Timer id: {}", timer_id);
-                },
-                None => {
-                    println!("No timer id found");
-                },
+            match systemd_wake::query_registration(*UNIT_NAME) {
+                Err(systemd_wake::QueryError::NotLoaded) => println!("No wake time registered."),
+                Err(e) => bail!(e),
+                Ok((_,waketime)) => {
+                    println!("Scheduled to wake at {}", waketime);
+                }
             }
         },
         Some(command) if command == "digest" => {
@@ -195,7 +197,7 @@ fn run() -> Result<()> {
             debug!("Called with update");
             if let Some(tasks) = tasks::Tasks::read()? {
                 match tasks.update_all() {
-                    Some(next_event) => schedule::register(next_event.with_timezone(&Local))?,
+                    Some(next_event) => systemd_wake::register(next_event.with_timezone(&Local).naive_local(),*UNIT_NAME,std::process::Command::new("prawnd"))?,
                     None => {},
                 }
                 tasks.write()?;
